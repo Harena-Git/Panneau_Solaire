@@ -1,0 +1,23 @@
+Panneau Solaire :
+    - input :
+        - tout les materiels qu'on utilise a la maison avec heure
+            1 -- television (matin) -> 1h -> 75 w
+            2 -- ordinateur (soir) -> 2h -> 150 w
+            3 -- lumiere (soir) -> 1h -> 50 w
+            4 -- etc...
+    - output :
+        - le systeme propose combien de watt il faut pour alimenter tous les materiels
+        - le systeme propose la puissance en watt du batterie que il doit acheter
+
+    Le panneau donne de la puissance en watt (1000w = 1kw)
+    Le batterie est une magasinage de puissance qui donne comme unite le watt heure (wh)
+    ou kilowatt heure (kwh) (si le batterie est 1kwh et si on branche avec un materiel de
+    100w, le batterie va durer 10h)
+    1Kwh = 1000Wh 
+    Recharge batterie, si on possede 1000w pour le charger, ca va prendre 1h
+    Si on a 500w, ca va prendre 2h, si on a 100w, ca va prendre 10h
+
+    3 tranches pour les appareils :
+        1- matin (6h - 17h)
+        2- apres-midi (17h - 19h)
+        3- nuit (19h - 06h)
