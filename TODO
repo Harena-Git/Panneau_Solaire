@@ -21,3 +21,11 @@ Panneau Solaire :
         1- matin (6h - 17h)
         2- apres-midi (17h - 19h)
         3- nuit (19h - 06h)
+
+    Fixer les materiels avec les tranches d'heures.
+    Quand c'est la journees 6h a 5h, c'est le panneau qui fonctionne pas le batterie
+    pour savoir la puissance du panneau solaire.
+    Pendant la nuit, le panneau ne fonctionne pas, donc le batterie fonctionne.
+    Calculer les materiels qui vont fonctionner pendant la nuit.
+
+    
