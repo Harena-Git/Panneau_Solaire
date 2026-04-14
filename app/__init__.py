@@ -1,0 +1,3 @@
+"""
+Panneau Solaire – package root.
+"""

@@ -1,0 +1,91 @@
+# ---------------------------------------------------------------------------
+# Panneau Solaire – docker-compose
+# Services:
+#   sqlserver  – Microsoft SQL Server 2022
+#   app        – Python management application
+# ---------------------------------------------------------------------------
+
+services:
+
+  # -------------------------------------------------------------------------
+  # SQL Server
+  # -------------------------------------------------------------------------
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: panneau_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${SA_PASSWORD:-PanneauSolaire2024!}"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test:
+        - "CMD"
+        - "/opt/mssql-tools18/bin/sqlcmd"
+        - "-S"
+        - "localhost"
+        - "-U"
+        - "sa"
+        - "-P"
+        - "${SA_PASSWORD:-PanneauSolaire2024!}"
+        - "-Q"
+        - "SELECT 1"
+        - "-C"
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # -------------------------------------------------------------------------
+  # Database initialisation (runs once then exits)
+  # -------------------------------------------------------------------------
+  db-init:
+    build: .
+    container_name: panneau_db_init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      DB_SERVER: sqlserver
+      DB_PORT: "1433"
+      DB_NAME: "PanneauSolaire"
+      DB_USER: "sa"
+      DB_PASSWORD: "${SA_PASSWORD:-PanneauSolaire2024!}"
+    volumes:
+      - ./sql/init.sql:/init.sql:ro
+    command: >
+      sh -c "
+        /opt/mssql-tools18/bin/sqlcmd
+          -S sqlserver -U sa
+          -P '${SA_PASSWORD:-PanneauSolaire2024!}'
+          -i /init.sql -C &&
+        echo 'Base de données initialisée avec succès.'
+      "
+    restart: "no"
+
+  # -------------------------------------------------------------------------
+  # Python application (interactive CLI)
+  # Run with: docker-compose run --rm app list-panels
+  # -------------------------------------------------------------------------
+  app:
+    build: .
+    container_name: panneau_app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      DB_SERVER: sqlserver
+      DB_PORT: "1433"
+      DB_NAME: "PanneauSolaire"
+      DB_USER: "sa"
+      DB_PASSWORD: "${SA_PASSWORD:-PanneauSolaire2024!}"
+    stdin_open: true
+    tty: true
+    command: ["python", "-m", "app.main", "--help"]
+
+volumes:
+  sqlserver_data:
