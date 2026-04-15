@@ -27,5 +27,21 @@ Panneau Solaire :
     pour savoir la puissance du panneau solaire.
     Pendant la nuit, le panneau ne fonctionne pas, donc le batterie fonctionne.
     Calculer les materiels qui vont fonctionner pendant la nuit.
+    Exemple : si on ajoute un materiels de 500kwh sur un batterie(1 kwh), le batterie
+              peut supporter pendant 2 heures.
 
-    
+    Pendant la journee, le batterie se recharge en meme temps qu'on utilise les materiels
+    Le batterie doit etre full charge pendant la journee (100% a 17h)
+
+    Panneau solaire -> seul le 40% de sa puissance est utilisable
+    Exemple : si on achete un panneau de 2500w -> ca va donner 1000w
+    Pour les batteries -> ajout de 50% (wh)
+    Exemple : si le batterie est de 1kwh -> on devrait donc acheter un batterie de 1.5kwh (1500wh)
+
+    17h a 19h -> 50% du panneau est utilisable
+    Le soleil disparait a 19h
+
+    Lu but du systeme est de proposer la quantite de panneau solaire necessaire pour alimenter 
+    tous les materiels : caracteristiques des panneaux solaires, batteries, etc.
+
+    Finir d'abord les calculs theoriques.
