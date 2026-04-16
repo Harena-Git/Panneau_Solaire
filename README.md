@@ -2,7 +2,8 @@
 
 Développer un système (Python + SQL Server) capable de :
 
-* Calculer la **consation énergétique quotidienne**
+* Permettre à l’utilisateur de saisir ses appareils électriques
+* Calculer la **consommation énergétique quotidienne**
 * Déterminer :
 
   * la **puissance nécessaire des panneaux solaires (W)**
@@ -14,26 +15,115 @@ Développer un système (Python + SQL Server) capable de :
 
 ---
 
-## ⚙️ Règles métier (logique du système)
+# 🔁 🔥 Fonctionnalité principale : INPUT → CALCUL → OUTPUT
 
-### 🔌 1. Consommation des appareils
+## 📥 INPUT (Entrée utilisateur)
 
-Chaque appareil possède :
+L’utilisateur saisit une liste d’appareils avec :
 
-* un **nom**
-* une **puissance (W)**
-* une **durée d’utilisation (heures)**
-* une **tranche horaire**
+* nom
+* puissance (W)
+* durée d’utilisation (heures)
+* tranche horaire
 
-👉 Formule :
+### Exemple :
 
+```json
+[
+  {
+    "nom": "Télévision",
+    "puissance_w": 75,
+    "duree_h": 1,
+    "tranche": "matin"
+  },
+  {
+    "nom": "Ordinateur",
+    "puissance_w": 150,
+    "duree_h": 2,
+    "tranche": "nuit"
+  },
+  {
+    "nom": "Lumière",
+    "puissance_w": 50,
+    "duree_h": 1,
+    "tranche": "nuit"
+  }
+]
 ```
+
+---
+
+## ⚙️ TRAITEMENT (Pipeline de calcul)
+
+### 1. Calcul énergie par appareil
+
+```python
+energie = puissance_w * duree_h
+```
+
+---
+
+### 2. Séparation jour / nuit
+
+```python
+if tranche in ["matin", "apres-midi"]:
+    energie_jour += energie
+else:
+    energie_nuit += energie
+```
+
+---
+
+### 3. Calcul batterie nécessaire
+
+```python
+batterie = energie_nuit * 1.5
+```
+
+---
+
+### 4. Calcul besoin total panneau
+
+```python
+besoin_total = energie_jour + energie_nuit
+```
+
+---
+
+### 5. Calcul puissance panneau réel
+
+```python
+puissance_panneau = besoin_total / (heures_soleil * 0.4)
+```
+
+---
+
+## 📤 OUTPUT (Résultat du système)
+
+Le système retourne :
+
+```json
+{
+  "energie_jour_wh": 225,
+  "energie_nuit_wh": 200,
+  "batterie_recommandee_wh": 300,
+  "puissance_panneau_recommandee_w": 500
+}
+```
+
+---
+
+# ⚙️ Règles métier
+
+## 🔌 1. Consommation des appareils
+
+```text
 Energie (Wh) = Puissance (W) × Durée (h)
 ```
 
 ---
 
-### 🕒 2. Tranches horaires
+## 🕒 2. Tranches horaires
 
 | Tranche        | Heure     | Source principale |
 | -------------- | --------- | ----------------- |
@@ -43,114 +133,90 @@ Energie (Wh) = Puissance (W) × Durée (h)
 
 ---
 
-### ☀️ 3. Production des panneaux solaires
+## ☀️ 3. Production panneaux
 
-* Seulement **40% de la puissance est réellement utilisable**
+* 40% de rendement réel
 
-👉 Formule :
-
-```
+```text
 Puissance réelle = Puissance panneau × 0.4
 ```
 
-* Entre **17h et 19h → 50% de production**
+* 50% entre 17h et 19h
 
 ---
 
-### 🔋 4. Batterie
+## 🔋 4. Batterie
 
-* Capacité exprimée en **Wh ou kWh**
-* Marge de sécurité : **+50%**
+* Stockage en Wh / kWh
+* Marge de sécurité : +50%
 
-👉 Formule :
-
+```text
+Capacité batterie = besoin_nuit × 1.5
 ```
-Capacité batterie réelle = besoin × 1.5
-```
-
-* Fonctionne uniquement **la nuit (19h → 06h)**
 
 ---
 
-### 🔄 5. Recharge batterie
+## 🔄 5. Recharge batterie
 
-Pendant la journée :
-
-* Le panneau :
+* Pendant la journée :
 
   * alimente les appareils
   * recharge la batterie
 
-👉 Règle importante :
+👉 Contrainte :
 
-> La batterie doit être **100% chargée à 17h**
+```text
+Batterie = 100% à 17h
+```
 
 ---
 
-### ⏱️ 6. Temps de charge batterie
+## ⏱️ 6. Temps de charge
 
-👉 Formule :
-
+```text
+Temps (h) = Capacité batterie / Puissance disponible
 ```
-Temps (h) = Capacité batterie (Wh) / Puissance disponible (W)
-```
-
-Exemples :
-
-* 1000W → 1h pour 1000Wh
-* 500W → 2h
-* 100W → 10h
 
 ---
 
-## 🧠 Logique globale du système
+# 🧠 Logique globale
 
 ### Étape 1 : Séparer les consommations
 
-* Appareils de **jour**
-* Appareils de **nuit**
+* Jour
+* Nuit
 
 ---
 
-### Étape 2 : Calcul énergie totale
+### Étape 2 : Calcul énergie
 
-```
-Energie totale jour = somme appareils (jour)
-Energie totale nuit = somme appareils (nuit)
-```
-
----
-
-### Étape 3 : Calcul batterie
-
-```
-Batterie nécessaire = Energie nuit × 1.5
+```text
+Energie jour = somme appareils jour
+Energie nuit = somme appareils nuit
 ```
 
 ---
 
-### Étape 4 : Calcul panneaux solaires
+### Étape 3 : Batterie
 
-Le panneau doit couvrir :
-
-* consommation jour
-* recharge batterie
-
-```
-Besoin total jour = Energie jour + Energie nuit
-```
-
-Puis appliquer rendement :
-
-```
-Puissance panneau = Besoin total / (heures ensoleillées × 0.4)
+```text
+Batterie = Energie nuit × 1.5
 ```
 
 ---
 
-## 🧱 Architecture du projet
+### Étape 4 : Panneaux
 
-### 📦 Modules Python
+```text
+Besoin total = Energie jour + Energie nuit
+Puissance panneau = Besoin / (heures × 0.4)
+```
+
+---
+
+# 🧩 Architecture du projet
+
+## 📦 Modules Python
 
 ---
 
@@ -163,7 +229,7 @@ Puissance panneau = Besoin total / (heures ensoleillées × 0.4)
 - nom
 - puissance_w
 - duree_h
-- tranche (matin / soir / nuit)
+- tranche
 ```
 
 ---
@@ -175,7 +241,7 @@ Puissance panneau = Besoin total / (heures ensoleillées × 0.4)
 
 Tables :
 
-```
+```text
 Appareils
 Consommations
 Resultats
@@ -188,44 +254,67 @@ Resultats
 #### `consommation_service.py`
 
 * calcul énergie appareil
-* calcul total jour / nuit
+* total jour / nuit
 
 ---
 
 #### `batterie_service.py`
 
-* calcul capacité batterie
-* appliquer marge 50%
+* calcul batterie
 
 ---
 
 #### `panneau_service.py`
 
-* calcul puissance panneau
-* appliquer rendement 40%
+* calcul panneau
 
 ---
 
-#### `simulation_service.py`
+#### 🔥 `systeme_dimensionnement.py` (NOUVEAU — MODULE PRINCIPAL)
 
-* simuler une journée complète
-* vérifier :
+👉 Gère tout le flux :
 
-  * batterie chargée à 17h
-  * autonomie nuit OK
+### Fonction principale :
+
+```python
+def calculer_systeme(appareils: list):
+    energie_jour = 0
+    energie_nuit = 0
+
+    for app in appareils:
+        energie = app["puissance_w"] * app["duree_h"]
+
+        if app["tranche"] in ["matin", "apres-midi"]:
+            energie_jour += energie
+        else:
+            energie_nuit += energie
+
+    batterie = energie_nuit * 1.5
+    besoin_total = energie_jour + energie_nuit
+
+    heures_soleil = 11
+    puissance_panneau = besoin_total / (heures_soleil * 0.4)
+
+    return {
+        "energie_jour": energie_jour,
+        "energie_nuit": energie_nuit,
+        "batterie": batterie,
+        "panneau": puissance_panneau
+    }
+```
 
 ---
 
 ### 4. `utils/`
 
-* conversions (W ↔ kW, Wh ↔ kWh)
-* gestion du temps
+* conversions unités
+* helpers
 
 ---
 
-## 🗄️ Base de données (SQL Server)
+# 🗄️ Base de données
 
-### Table : `appareils`
+## Table : `appareils`
 
 ```sql
 id INT PRIMARY KEY IDENTITY
@@ -237,7 +326,7 @@ tranche VARCHAR(20)
 
 ---
 
-### Table : `resultats`
+## Table : `resultats`
 
 ```sql
 id INT PRIMARY KEY IDENTITY
@@ -250,56 +339,93 @@ date_calcul DATETIME
 
 ---
 
-## ✅ TODO (à implémenter)
+# 🖥️ Interface utilisateur
 
-### 🔹 Phase 1 — Base
+## CLI (terminal)
 
-* [ ] Créer la base SQL Server
-* [ ] Créer les tables
-* [ ] Connexion Python → SQL Server
+```python
+appareils = []
 
----
+while True:
+    nom = input("Nom appareil : ")
+    puissance = float(input("Puissance (W) : "))
+    duree = float(input("Durée (h) : "))
+    tranche = input("Tranche (matin / apres-midi / nuit) : ")
 
-### 🔹 Phase 2 — Logique métier
+    appareils.append({
+        "nom": nom,
+        "puissance_w": puissance,
+        "duree_h": duree,
+        "tranche": tranche
+    })
 
-* [ ] Implémenter calcul énergie appareil
-* [ ] Implémenter séparation jour / nuit
-* [ ] Implémenter calcul batterie
-* [ ] Implémenter calcul panneau
-
----
-
-### 🔹 Phase 3 — Simulation
-
-* [ ] Simuler une journée complète
-* [ ] Vérifier recharge batterie
-* [ ] Gérer cas insuffisance énergie
-
----
-
-### 🔹 Phase 4 — Interface
-
-* [ ] CLI (terminal) ou GUI (Tkinter / Web)
-* [ ] Ajouter appareils
-* [ ] Afficher résultats
+    stop = input("Ajouter autre ? (n pour stop) : ")
+    if stop == "n":
+        break
+```
 
 ---
 
-### 🔹 Phase 5 — Améliorations
+## Affichage résultats
 
-* [ ] Ajouter météo (optionnel)
-* [ ] Ajouter rendement variable
-* [ ] Historique des calculs
-* [ ] Export (PDF / Excel)
+```python
+resultat = calculer_systeme(appareils)
+
+print("Energie jour :", resultat["energie_jour"], "Wh")
+print("Energie nuit :", resultat["energie_nuit"], "Wh")
+print("Batterie recommandée :", resultat["batterie"], "Wh")
+print("Panneau recommandé :", resultat["panneau"], "W")
+```
 
 ---
 
-## 🚀 Résultat attendu
+# ✅ TODO
+
+## Phase 1
+
+* [ ] Base SQL Server
+* [ ] Tables
+* [ ] Connexion Python
+
+---
+
+## Phase 2
+
+* [ ] Calcul énergie
+* [ ] Jour / nuit
+* [ ] Batterie
+* [ ] Panneaux
+
+---
+
+## Phase 3
+
+* [ ] Module `systeme_dimensionnement`
+* [ ] Simulation complète
+
+---
+
+## Phase 4
+
+* [ ] Interface CLI
+* [ ] Interface GUI / Web
+
+---
+
+## Phase 5
+
+* [ ] Historique
+* [ ] Export
+* [ ] Optimisation rendement
+
+---
+
+# 🚀 Résultat attendu
 
 Le système doit fournir :
 
-* 🔋 Capacité batterie recommandée
-* ☀️ Puissance panneau recommandée
-* 📊 Détail consommation (jour / nuit)
+* 🔋 Batterie recommandée
+* ☀️ Panneaux nécessaires
+* 📊 Détail consommation
 
 ---
